@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializer import ExpenseSerializer, IncomeSerializer, RegisterSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 
 
 class RegisterView(generics.CreateAPIView):
@@ -39,10 +40,26 @@ class IncomeUpdate(generics.RetrieveUpdateDestroyAPIView):
     queryset = Income.objects.all()
     serializer_class = IncomeSerializer
 
-class ExpenseCreate(generics.ListCreateAPIView):
-    queryset = Expense.objects.all()
-    serializer_class = ExpenseSerializer
+class ExpenseCreate(APIView):
+    permission_classes = [IsAuthenticated] 
 
-class IncomeCreate(generics.ListCreateAPIView):
-    queryset = Income.objects.all()
-    serializer_class = IncomeSerializer
+    def post(self, request, *args, **kwargs):
+        serializer = ExpenseSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IncomeCreate(APIView):
+    permission_classes = [IsAuthenticated]  
+
+    def post(self, request, *args, **kwargs):
+        serializer = IncomeSerializer(data=request.data)
+
+        if serializer.is_valid():
+           
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
